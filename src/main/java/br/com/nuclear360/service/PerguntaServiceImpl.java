@@ -1,5 +1,6 @@
 package br.com.nuclear360.service;
 
+import br.com.nuclear360.exceptions.ResourceNotFoundException;
 import br.com.nuclear360.model.Pergunta;
 import br.com.nuclear360.model.PerguntaStatus;
 import br.com.nuclear360.model.PerguntaTipo;
@@ -21,26 +22,21 @@ public class PerguntaServiceImpl implements  PerguntaService {
 
     @Override
     public Pergunta create(Pergunta pergunta) {
+        pergunta.setId(null);
         return perguntaRepository.save(pergunta);
     }
 
     @Override
     public Pergunta update(Long id, Pergunta update) {
-        Optional<Pergunta> existing = this.perguntaRepository.findById(id);
-        if(!existing.isPresent()){
-            //lançar erro
-        }
+        findById(id);
         update.setId(id);
         return this.perguntaRepository.save(update);
     }
 
     @Override
     public void delete(Long id) {
-        Optional<Pergunta> existing = this.perguntaRepository.findById(id);
-        if(!existing.isPresent()){
-            //lançar erro
-        }
-        this.perguntaRepository.delete(existing.get());
+        findById(id);
+        this.perguntaRepository.delete(findById(id));
     }
 
 
@@ -61,10 +57,13 @@ public class PerguntaServiceImpl implements  PerguntaService {
 
     @Override
     public Pergunta findById(Long id) {
-        Optional<Pergunta> existing = this.perguntaRepository.findById(id);
-        if(!existing.isPresent()){
-            //lançar erro
-        }
-        return existing.get();
+        return this.perguntaRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("pergunta", id));
+    }
+
+    @Override
+    public Pergunta findWithRespostaById(Long id) {
+        return this.perguntaRepository.findWithRespostaById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("pergunta", id));
     }
 }

@@ -1,5 +1,6 @@
 package br.com.nuclear360.model;
 
+import br.com.nuclear360.exceptions.InvalidStatusTransitionException;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -28,16 +29,16 @@ public class Pergunta {
     private List<Resposta>  respostas;
     private List<String> dicas;
     private Integer ordem;
-    private boolean ativo;
 
     public void setStatus(PerguntaStatus status) {
-        if(this.status == null && status != PerguntaStatus.EM_ANALISE) {
-            //lançar erro
+        if(this.status == null && status == PerguntaStatus.EM_ANALISE) {
+            this.status = status;
+            return;
         }
         else if((this.status != PerguntaStatus.EM_ANALISE && status == PerguntaStatus.EM_ANALISE)
                 || (this.status == PerguntaStatus.INDISPONIVEL && status == PerguntaStatus.DISPONIVEL)
         ||(this.status == PerguntaStatus.EM_ANALISE && status == PerguntaStatus.EM_REVISAO)){
-            //lançar erro
+            throw new InvalidStatusTransitionException("Esta pergunta não pode ser alterado para " + status + "");
         }
         else{
             this.status = status;

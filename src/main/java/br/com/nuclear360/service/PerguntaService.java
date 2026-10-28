@@ -20,4 +20,6 @@ public interface PerguntaService {
     Page<Pergunta> findByTipo(PerguntaTipo tipo, Integer page, Integer size);
 
     Pergunta findById(Long id);
+
+    Pergunta findWithRespostaById(Long id);
 }
