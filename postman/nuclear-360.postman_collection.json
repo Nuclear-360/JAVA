@@ -1,0 +1,740 @@
+{
+  "info": {
+    "_postman_id": "nuclear-360-semana03-adaptado-2026",
+    "name": "Nuclear 360 - Semana 3 - Fluxo Cronológico",
+    "description": "Coleção do Nuclear 360 organizada em ordem cronológica de execução. Fluxo: criar pergunta -> buscar -> criar resposta -> consultar respostas -> listar/filtrar -> atualizar -> testar validações/404 -> excluir. As variáveis perguntaId e respostaId são preenchidas automaticamente pelos testes das requests de criação.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "perguntaId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "respostaId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "nonExistentId",
+      "value": "999999",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Fluxo cronológico - Nuclear 360",
+      "description": "Execute de cima para baixo no Collection Runner.",
+      "item": [
+        {
+          "name": "Criar pergunta",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"enunciado\": \"Qual é a principal finalidade de uma API REST?\",\n  \"tipo\": \"MULTIPLA_ESCOLHA\",\n  \"nivelDificuldade\": \"FACIL\",\n  \"explicacao\": \"Uma API REST permite a comunicação entre sistemas por meio de recursos e métodos HTTP.\",\n  \"valorPontos\": 10,\n  \"tempoLimite\": 60,\n  \"dicas\": [\n    \"Pense em comunicação entre aplicações.\",\n    \"Considere o uso do protocolo HTTP.\"\n  ],\n  \"ordem\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/pergunta",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pergunta"
+              ]
+            },
+            "description": "Cria uma pergunta. O controller força o status inicial para EM_ANALISE."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201 Created\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Header Location presente\", () => pm.response.to.have.header(\"Location\"));",
+                  "const json = pm.response.json();",
+                  "pm.test(\"status inicial é EM_ANALISE\", () => pm.expect(json.status).to.eql(\"EM_ANALISE\"));",
+                  "pm.test(\"resposta possui campos esperados\", () => {",
+                  "    pm.expect(json).to.have.all.keys(\"id\", \"enunciado\", \"tipo\", \"status\", \"nivelDificuldade\", \"explicacao\", \"valorPontos\", \"tempoLimite\", \"ordem\", \"dicas\");",
+                  "});",
+                  "pm.collectionVariables.set(\"perguntaId\", json.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Buscar pergunta por id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/pergunta/{{perguntaId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pergunta",
+                "{{perguntaId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200 OK\", () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test(\"id corresponde ao criado\", () => pm.expect(String(json.id)).to.eql(pm.collectionVariables.get(\"perguntaId\")));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Buscar pergunta com respostas",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/pergunta/{{perguntaId}}/with-resposta",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pergunta",
+                "{{perguntaId}}",
+                "with-resposta"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200 OK\", () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test(\"resposta possui array de respostas\", () => pm.expect(json).to.have.property(\"respostas\"));",
+                  "pm.test(\"respostas é um array\", () => pm.expect(json.respostas).to.be.an(\"array\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar perguntas - paginado",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/pergunta?page=0&sizePage=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pergunta"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "sizePage",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200 OK\", () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test(\"corpo no formato PageResponse\", () => {",
+                  "    pm.expect(json).to.have.property(\"content\");",
+                  "    pm.expect(json).to.have.property(\"page\", 0);",
+                  "    pm.expect(json).to.have.property(\"size\");",
+                  "    pm.expect(json).to.have.property(\"totalElements\");",
+                  "    pm.expect(json).to.have.property(\"totalPages\");",
+                  "    pm.expect(json).to.have.property(\"last\");",
+                  "    pm.expect(json.content).to.be.an(\"array\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar perguntas - filtro por status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/pergunta?status=EM_ANALISE&page=0&sizePage=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pergunta"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "EM_ANALISE"
+                },
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "sizePage",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200 OK\", () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test(\"todas as perguntas retornadas têm status EM_ANALISE\", () => {",
+                  "    json.content.forEach(p => pm.expect(p.status).to.eql(\"EM_ANALISE\"));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar perguntas - filtro por tipo",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/pergunta?tipo=MULTIPLA_ESCOLHA&page=0&sizePage=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pergunta"
+              ],
+              "query": [
+                {
+                  "key": "tipo",
+                  "value": "MULTIPLA_ESCOLHA"
+                },
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "sizePage",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200 OK\", () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test(\"todas as perguntas têm o tipo filtrado\", () => {",
+                  "    json.content.forEach(p => pm.expect(p.tipo).to.eql(\"MULTIPLA_ESCOLHA\"));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Atualizar pergunta",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"enunciado\": \"Qual é a principal finalidade de uma API REST? - Atualizada\",\n  \"tipo\": \"MULTIPLA_ESCOLHA\",\n  \"nivelDificuldade\": \"MEDIO\",\n  \"explicacao\": \"Explicação atualizada da pergunta.\",\n  \"valorPontos\": 20,\n  \"tempoLimite\": 90,\n  \"dicas\": [\n    \"Considere os recursos HTTP.\",\n    \"Pense na comunicação entre sistemas.\"\n  ],\n  \"ordem\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/pergunta/{{perguntaId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pergunta",
+                "{{perguntaId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200 OK\", () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test(\"enunciado atualizado\", () => pm.expect(json.enunciado).to.include(\"Atualizada\"));",
+                  "pm.test(\"valor de pontos atualizado\", () => pm.expect(json.valorPontos).to.eql(20));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Atualizar resposta",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"conteudo\": \"Conteúdo atualizado da resposta\",\n  \"respostaCerta\": false,\n  \"explicacao\": \"Explicação atualizada\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/resposta/{{respostaId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "resposta",
+                "{{respostaId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200 OK\", () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test(\"id da resposta permanece o mesmo\", () => pm.expect(String(json.id)).to.eql(pm.collectionVariables.get(\"respostaId\")));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Criar pergunta - enunciado vazio (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"enunciado\": \"\",\n  \"tipo\": \"MULTIPLA_ESCOLHA\",\n  \"nivelDificuldade\": \"FACIL\",\n  \"explicacao\": \"Explicação de teste\",\n  \"valorPontos\": 10,\n  \"tempoLimite\": 60,\n  \"dicas\": [\"Dica\"],\n  \"ordem\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/pergunta",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pergunta"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400 Bad Request\", () => pm.response.to.have.status(400));",
+                  "const json = pm.response.json();",
+                  "pm.test(\"corpo é ValidationErrorResponse\", () => {",
+                  "    pm.expect(json).to.have.property(\"status\", 400);",
+                  "    pm.expect(json).to.have.property(\"error\");",
+                  "    pm.expect(json).to.have.property(\"timestamp\");",
+                  "    pm.expect(json).to.have.property(\"errors\");",
+                  "    pm.expect(json.errors).to.be.an(\"array\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar perguntas - status inválido (400)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/pergunta?status=FINALIZADO",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pergunta"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "FINALIZADO"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400 Bad Request\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Buscar pergunta inexistente (404)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/pergunta/{{nonExistentId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pergunta",
+                "{{nonExistentId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404 Not Found\", () => pm.response.to.have.status(404));",
+                  "const json = pm.response.json();",
+                  "pm.test(\"corpo é ErrorCustomResponse\", () => {",
+                  "    pm.expect(json).to.have.property(\"status\", 404);",
+                  "    pm.expect(json).to.have.property(\"message\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Atualizar pergunta inexistente (404)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"enunciado\": \"Não importa\",\n  \"tipo\": \"MULTIPLA_ESCOLHA\",\n  \"nivelDificuldade\": \"FACIL\",\n  \"explicacao\": \"Não importa\",\n  \"valorPontos\": 10,\n  \"tempoLimite\": 60,\n  \"dicas\": [\"Dica\"],\n  \"ordem\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/pergunta/{{nonExistentId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pergunta",
+                "{{nonExistentId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404 Not Found\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Remover resposta",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/resposta/{{respostaId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "resposta",
+                "{{respostaId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200 OK\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Remover pergunta",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/pergunta/{{perguntaId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pergunta",
+                "{{perguntaId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200 OK\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Criar resposta para pergunta",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"conteudo\": \"Permitir comunicação entre sistemas por meio de recursos HTTP.\",\n  \"respostaCerta\": true,\n  \"explicacao\": \"Essa é a finalidade esperada no contexto da pergunta.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/pergunta/{{perguntaId}}/resposta",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pergunta",
+                "{{perguntaId}}",
+                "resposta"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201 Created\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Header Location presente\", () => pm.response.to.have.header(\"Location\"));",
+                  "const json = pm.response.json();",
+                  "pm.test(\"resposta está correta\", () => pm.expect(json.respostaCerta).to.eql(true));",
+                  "pm.collectionVariables.set(\"respostaId\", json.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar respostas",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/resposta?page=0&pageSize=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "resposta"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200 OK\", () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test(\"corpo no formato PageResponse\", () => {",
+                  "    pm.expect(json).to.have.property(\"content\");",
+                  "    pm.expect(json).to.have.property(\"page\");",
+                  "    pm.expect(json).to.have.property(\"size\");",
+                  "    pm.expect(json).to.have.property(\"totalElements\");",
+                  "    pm.expect(json).to.have.property(\"totalPages\");",
+                  "    pm.expect(json).to.have.property(\"last\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar respostas por pergunta",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/resposta?perguntaId={{perguntaId}}&page=0&pageSize=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "resposta"
+              ],
+              "query": [
+                {
+                  "key": "perguntaId",
+                  "value": "{{perguntaId}}"
+                },
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200 OK\", () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "json.content.forEach(r => pm.expect(String(r.perguntaId)).to.eql(pm.collectionVariables.get(\"perguntaId\")));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Remover resposta inexistente (404)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/resposta/{{nonExistentId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "resposta",
+                "{{nonExistentId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404 Not Found\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

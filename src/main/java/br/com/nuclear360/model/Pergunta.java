@@ -20,8 +20,7 @@ public class Pergunta {
     private String enunciado;
     private PerguntaTipo tipo;
     private PerguntaStatus status;
-    private String nivelDificuldade;
-    private String explicacao;
+    private PerguntaNivelDificuldade nivelDificuldade;
     private Integer valorPontos;
     private Integer tempoLimite;
 

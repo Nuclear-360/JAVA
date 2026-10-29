@@ -10,13 +10,13 @@ public final class PerguntaMapper {
 
     public static PerguntaResponse toResponse(Pergunta pergunta){
         return new PerguntaResponse(pergunta.getId(), pergunta.getEnunciado(),pergunta.getTipo(),
-                pergunta.getStatus(), pergunta.getNivelDificuldade(), pergunta.getExplicacao(), pergunta.getValorPontos(),
+                pergunta.getStatus(), pergunta.getNivelDificuldade(), pergunta.getValorPontos(),
                 pergunta.getTempoLimite(), pergunta.getOrdem(), pergunta.getDicas());
     }
 
     public static PerguntaResponseWithResposta toResponseWithRespostas(Pergunta pergunta){
         return new PerguntaResponseWithResposta(pergunta.getId(), pergunta.getEnunciado(),pergunta.getTipo(),
-                pergunta.getStatus(), pergunta.getNivelDificuldade(), pergunta.getExplicacao(), pergunta.getValorPontos(),
+                pergunta.getStatus(), pergunta.getNivelDificuldade(), pergunta.getValorPontos(),
                 pergunta.getTempoLimite(), pergunta.getOrdem(), pergunta.getDicas(),
                 pergunta.getRespostas().stream().map(RespostaMapper::toResponse).toList());
     }
