@@ -1,13 +1,14 @@
 package br.com.nuclear360.controller;
 
-import br.com.nuclear360.dto.PageResponse;
-import br.com.nuclear360.dto.PerguntaRequest;
-import br.com.nuclear360.dto.PerguntaResponse;
+import br.com.nuclear360.dto.*;
 import br.com.nuclear360.mapper.PerguntaMapper;
+import br.com.nuclear360.mapper.RespostaMapper;
 import br.com.nuclear360.model.Pergunta;
 import br.com.nuclear360.model.PerguntaStatus;
 import br.com.nuclear360.model.PerguntaTipo;
+import br.com.nuclear360.model.Resposta;
 import br.com.nuclear360.service.PerguntaService;
+import br.com.nuclear360.service.RespostaService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
@@ -23,10 +24,13 @@ import java.net.URI;
 @Validated
 @Tag(name = "Pergunta", description = "Endpoints para gerenciar perguntas")
 public class PerguntaController {
-    private final PerguntaService perguntaService;
 
-    public PerguntaController(PerguntaService perguntaService){
+    private final PerguntaService perguntaService;
+    private final RespostaService respostaService;
+
+    public PerguntaController(PerguntaService perguntaService, RespostaService respostaService){
         this.perguntaService = perguntaService;
+        this.respostaService = respostaService;
     }
 
     @PostMapping
@@ -90,4 +94,23 @@ public class PerguntaController {
         return ResponseEntity.ok(PerguntaMapper.toResponse(pergunta));
     }
 
+    @GetMapping("/{perguntaId}/with-resposta")
+    public ResponseEntity<PerguntaResponseWithResposta> findWithRespostaById(@PathVariable @Positive Long perguntaId){
+        return ResponseEntity.ok(PerguntaMapper.toResponseWithRespostas(this.perguntaService.findWithRespostaById(perguntaId)));
+    }
+
+    @PostMapping("/{perguntaId}/resposta")
+    public ResponseEntity<RespostaResponse> createResposta(@PathVariable @Positive Long perguntaId,
+                                                           @RequestBody RespostaRequest respostaRequest){
+        Resposta resposta = new Resposta();
+
+        resposta.setConteudo(respostaRequest.conteudo());
+        resposta.setExplicacao(respostaRequest.explicacao());
+        resposta.setRespostaCerta(respostaRequest.respostaCerta());
+        resposta.setPergunta(this.perguntaService.findById(perguntaId));
+
+        Resposta created = this.respostaService.create(resposta);
+        return ResponseEntity.created(URI.create("/api/resposta/"+ created.getId()))
+                .body(RespostaMapper.toResponse(created));
+    }
 }

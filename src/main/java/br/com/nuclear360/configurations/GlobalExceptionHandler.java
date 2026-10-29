@@ -1,6 +1,8 @@
 package br.com.nuclear360.configurations;
 
 import br.com.nuclear360.dto.ErrorCustomResponse;
+import br.com.nuclear360.dto.ErrorFieldCustom;
+import br.com.nuclear360.dto.ValidationErrorResponse;
 import br.com.nuclear360.exceptions.InvalidStatusTransitionException;
 import br.com.nuclear360.exceptions.ResourceNotFoundException;
 import jakarta.validation.ConstraintViolationException;
@@ -30,7 +32,37 @@ public class GlobalExceptionHandler {
         return build(HttpStatus.CONFLICT, ex.getMessage());
     }
 
-   // @ExceptionHandler(Exception.class)
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ValidationErrorResponse> handleArgumentNotValidException(MethodArgumentNotValidException ex){
+
+        List<ErrorFieldCustom> fieldErrors = ex.getBindingResult().getFieldErrors().stream()
+                .map(fieldError -> new ErrorFieldCustom(fieldError.getField(), fieldError.getDefaultMessage()))
+                .toList();
+
+        List<ErrorFieldCustom> globalErrors = ex.getBindingResult().getGlobalErrors().stream()
+                .map(globalError -> new ErrorFieldCustom(globalError.getObjectName(), globalError.getDefaultMessage()))
+                .toList();
+
+        List<ErrorFieldCustom> errors = Stream.concat(fieldErrors.stream(), globalErrors.stream()).toList();
+
+        ValidationErrorResponse body = new ValidationErrorResponse(
+                LocalDateTime.now(),
+                HttpStatus.BAD_REQUEST.value(),
+                HttpStatus.BAD_REQUEST.getReasonPhrase(),
+                errors
+        );
+        return ResponseEntity.badRequest().body(body);
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<ErrorCustomResponse> handleConstraintViolation(ConstraintViolationException ex) {
+        String message = ex.getConstraintViolations().stream()
+                .map(v -> v.getPropertyPath() + ": " + v.getMessage())
+                .collect(Collectors.joining("; "));
+        return build(HttpStatus.BAD_REQUEST, message);
+    }
+
+    @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorCustomResponse> handleGeneric(Exception ex) {
         return build(HttpStatus.INTERNAL_SERVER_ERROR, "Erro interno inesperado");
     }
