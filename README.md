@@ -20,7 +20,7 @@ API REST em **Spring Boot (Java 21)** que gerencia as perguntas e respostas do q
 
 ## Arquitetura
 
-![Arquitetura](arquitetura_h2.png)
+![Arquitetura](arquiteturaH2.png)
 
 Fluxo: o cliente acessa a API pela internet → o **NSG** (firewall do Azure) libera a porta 8080 → a requisição chega na **VM Ubuntu**, onde o **Docker** roda o **container da API** (com o H2 embarcado). A porta 22 (SSH) fica restrita ao IP do desenvolvedor.
 
