@@ -13,7 +13,7 @@ az group create --name $RG --location $LOC
 
 # 2. VM Ubuntu, sem nenhuma porta aberta por padrão
 az vm create --resource-group $RG --name $VM \
-  --image Ubuntu2204 --size Standard_B2s \
+  --image Ubuntu2204 --size Standard_D2s_v4 \
   --admin-username azureuser --generate-ssh-keys \
   --nsg-rule NONE
 
