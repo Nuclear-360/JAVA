@@ -1,4 +1,3 @@
-# ---- Estágio 1: compila o .jar com Maven ----
 FROM maven:3.9-eclipse-temurin-21 AS build
 WORKDIR /app
 COPY pom.xml .
@@ -6,7 +5,6 @@ RUN mvn -q dependency:go-offline
 COPY src ./src
 RUN mvn -q package -DskipTests
 
-# ---- Estágio 2: imagem final, leve, rodando como usuário não-root ----
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 # cria o usuário app e garante que ele pode gravar o arquivo do H2 em /app/data
